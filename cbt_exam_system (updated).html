@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBT Exam System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232736;
+    --border: #2e3347;
+    --accent: #4f8ef7;
+    --accent-dim: #1e2f4d;
+    --green: #22c55e;
+    --green-dim: #0f2a1a;
+    --red: #ef4444;
+    --red-dim: #2a0f0f;
+    --yellow: #f59e0b;
+    --text: #e8eaf0;
+    --text-muted: #7a819a;
+    --radius: 10px;
+    --font: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; width: 100%; max-width: 860px; padding: 32px 20px; }
+  .screen.active { display: block; }
+
+  /* ── HEADER ── */
+  .exam-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 22px;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .exam-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .exam-meta { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+  .meta-item { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+  .meta-item span { font-family: var(--mono); color: var(--accent); font-size: 14px; font-weight: 600; }
+  #timer-display { color: var(--yellow) !important; }
+  #timer-display.danger { color: var(--red) !important; animation: pulse 1s infinite; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+  /* ── WELCOME ── */
+  .welcome-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 48px 40px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .welcome-card h1 { font-size: 32px; font-weight: 700; margin-bottom: 10px; letter-spacing: -.5px; }
+  .welcome-card p { color: var(--text-muted); font-size: 15px; line-height: 1.6; max-width: 480px; margin: 0 auto 32px; }
+  .badge { display: inline-block; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; margin-bottom: 18px; }
+
+  .config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+    text-align: left;
+  }
+  .config-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .config-card label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 8px; }
+  .config-card select, .config-card input[type="text"], .config-card input[type="number"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: var(--font);
+    outline: none;
+    transition: border-color .2s;
+  }
+  .config-card select:focus, .config-card input:focus { border-color: var(--accent); }
+
+  .rules-list {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    text-align: left;
+    margin-bottom: 28px;
+  }
+  .rules-list h3 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 12px; }
+  .rules-list li { font-size: 14px; color: var(--text-muted); margin-bottom: 8px; padding-left: 4px; list-style: none; display: flex; gap: 10px; }
+  .rules-list li::before { content: "→"; color: var(--accent); flex-shrink: 0; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .18s;
+    font-family: var(--font);
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #6b9ef8; transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { background: #f87171; }
+  .btn-sm { padding: 8px 16px; font-size: 13px; }
+
+  /* ── QUESTION AREA ── */
+  .question-nav-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 180px;
+    gap: 20px;
+    align-items: start;
+  }
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .q-counter { font-size: 12px; color: var(--text-muted); font-family: var(--mono); margin-bottom: 16px; font-weight: 600; }
+  .q-text { font-size: 17px; line-height: 1.65; font-weight: 500; margin-bottom: 28px; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .15s;
+    user-select: none;
+  }
+  .option:hover { border-color: var(--accent); background: var(--accent-dim); }
+  .option.selected { border-color: var(--accent); background: var(--accent-dim); }
+  .option.correct { border-color: var(--green); background: var(--green-dim); }
+  .option.wrong { border-color: var(--red); background: var(--red-dim); }
+  .option-letter {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--mono);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .option.selected .option-letter { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .option.correct .option-letter { background: var(--green); border-color: var(--green); color: #fff; }
+  .option.wrong .option-letter { background: var(--red); border-color: var(--red); color: #fff; }
+  .option-text { font-size: 15px; line-height: 1.5; }
+
+  .q-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ── QUESTION PALETTE ── */
+  .palette-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    position: sticky;
+    top: 20px;
+  }
+  .palette-card h4 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 14px; }
+  .palette-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+  .palette-btn {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--mono);
+    cursor: pointer;
+    transition: all .12s;
+  }
+  .palette-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .palette-btn.current { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .palette-btn.answered { border-color: var(--green); background: var(--green-dim); color: var(--green); }
+  .palette-btn.flagged { border-color: var(--yellow); background: #2a200f; color: var(--yellow); }
+  .palette-legend { display: flex; flex-direction: column; gap: 6px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+  .flag-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    padding: 7px 12px;
+    font-size: 13px;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .flag-btn:hover, .flag-btn.active { border-color: var(--yellow); color: var(--yellow); }
+
+  /* ── RESULTS ── */
+  .result-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .score-ring {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 24px;
+    position: relative;
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .score-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform: none;
+  }
+  .score-text .pct { font-size: 32px; font-weight: 700; font-family: var(--mono); }
+  .score-text .lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; }
+  .result-verdict { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .result-sub { font-size: 14px; color: var(--text-muted); }
+
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    text-align: center;
+  }
+  .stat-box .val { font-size: 28px; font-weight: 700; font-family: var(--mono); }
+  .stat-box .key { font-size: 12px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .07em; }
+  .stat-box.correct .val { color: var(--green); }
+  .stat-box.wrong .val { color: var(--red); }
+  .stat-box.skipped .val { color: var(--text-muted); }
+  .stat-box.time .val { color: var(--yellow); font-size: 22px; }
+
+  /* ── REVIEW ── */
+  .review-section { margin-top: 20px; }
+  .review-section h3 { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 14px; }
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .review-item.pass { border-left: 3px solid var(--green); }
+  .review-item.fail { border-left: 3px solid var(--red); }
+  .review-item.skip { border-left: 3px solid var(--border); }
+  .review-q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .review-q-num { font-size: 12px; font-family: var(--mono); font-weight: 600; color: var(--text-muted); }
+  .review-badge {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+    padding: 3px 10px; border-radius: 20px;
+  }
+  .badge-pass { background: var(--green-dim); color: var(--green); }
+  .badge-fail { background: var(--red-dim); color: var(--red); }
+  .badge-skip { background: var(--surface2); color: var(--text-muted); }
+  .review-q-text { font-size: 15px; margin-bottom: 12px; line-height: 1.5; }
+  .review-answers { font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; }
+  .review-answers .your-ans { color: var(--red); }
+  .review-answers .correct-ans { color: var(--green); }
+  .review-answers span { font-weight: 600; color: var(--text); }
+
+  .result-actions { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 24px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+  }
+  .modal h3 { font-size: 20px; margin-bottom: 10px; }
+  .modal p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+  .modal-actions { display: flex; gap: 12px; justify-content: center; }
+
+  @media (max-width: 640px) {
+    .question-nav-wrapper { grid-template-columns: 1fr; }
+    .palette-card { position: static; }
+    .config-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .welcome-card { padding: 28px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- WELCOME SCREEN -->
+<div id="screen-welcome" class="screen active">
+  <div class="welcome-card">
+    <div class="badge">CBT Exam System</div>
+    <h1>Computer-Based Test</h1>
+    <p>Configure your session and start the exam. All answers are scored automatically and results shown at the end.</p>
+
+    <div class="config-grid">
+      <div class="config-card">
+        <label>Candidate Name</label>
+        <input type="text" id="cfg-name" placeholder="Enter your name" />
+      </div>
+      <div class="config-card">
+        <label>Exam Subject</label>
+        <input type="text" id="cfg-subject" placeholder="e.g. Digital Technology" value="Digital Technology" />
+      </div>
+      <div class="config-card">
+        <label>Number of Questions</label>
+        <select id="cfg-qcount">
+          <option value="5">5 Questions (Demo)</option>
+          <option value="10" selected>10 Questions</option>
+          <option value="20">20 Questions</option>
+          <option value="40">40 Questions</option>
+        </select>
+      </div>
+      <div class="config-card">
+        <label>Time Limit (minutes)</label>
+        <select id="cfg-time">
+          <option value="0">No Time Limit</option>
+          <option value="10">10 Minutes</option>
+          <option value="20">20 Minutes</option>
+          <option value="30" selected>30 Minutes</option>
+          <option value="45">45 Minutes</option>
+          <option value="60">60 Minutes</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="rules-list">
+      <h3>Instructions</h3>
+      <ul>
+        <li>Each question has four options — select the best answer.</li>
+        <li>You can navigate between questions using the palette or arrows.</li>
+        <li>Flag questions to revisit them before submitting.</li>
+        <li>The exam auto-submits when the timer runs out.</li>
+        <li>Unanswered questions are marked as skipped.</li>
+        <li>Results and a full review are shown after submission.</li>
+      </ul>
+    </div>
+
+    <button class="btn btn-primary" onclick="startExam()">Start Exam →</button>
+  </div>
+</div>
+
+<!-- EXAM SCREEN -->
+<div id="screen-exam" class="screen">
+  <div class="exam-header">
+    <div class="exam-title" id="header-title">CBT Exam</div>
+    <div class="exam-meta">
+      <div class="meta-item">Candidate: <span id="header-name">—</span></div>
+      <div class="meta-item">Question: <span id="header-qnum">1/10</span></div>
+      <div class="meta-item">⏱ <span id="timer-display">30:00</span></div>
+    </div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:10%"></div></div>
+
+  <div class="question-nav-wrapper">
+    <div class="question-card">
+      <div class="q-counter" id="q-counter">Question 1 of 10</div>
+      <div class="q-text" id="q-text"></div>
+      <div class="options" id="options-list"></div>
+      <div class="q-actions">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" id="btn-prev" onclick="navigate(-1)">← Prev</button>
+          <button class="btn btn-ghost btn-sm" id="btn-next" onclick="navigate(1)">Next →</button>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="flag-btn" id="flag-btn" onclick="toggleFlag()">⚑ Flag</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmSubmit()">Submit Exam</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="palette-card">
+      <h4>Questions</h4>
+      <div class="palette-grid" id="palette-grid"></div>
+      <div class="palette-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Current</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green-dim);border:1px solid var(--green)"></div>Answered</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2a200f;border:1px solid var(--yellow)"></div>Flagged</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--surface2)"></div>Unanswered</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="screen-result" class="screen">
+  <div class="result-header">
+    <div class="score-ring">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r="58" fill="none" stroke="var(--surface2)" stroke-width="10"/>
+        <circle id="score-arc" cx="70" cy="70" r="58" fill="none" stroke="var(--accent)" stroke-width="10"
+                stroke-dasharray="364.4" stroke-dashoffset="364.4" stroke-linecap="round"/>
+      </svg>
+      <div class="score-text">
+        <div class="pct" id="score-pct">0%</div>
+        <div class="lbl">Score</div>
+      </div>
+    </div>
+    <div class="result-verdict" id="result-verdict">—</div>
+    <div class="result-sub" id="result-sub">—</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box correct"><div class="val" id="stat-correct">0</div><div class="key">Correct</div></div>
+    <div class="stat-box wrong"><div class="val" id="stat-wrong">0</div><div class="key">Wrong</div></div>
+    <div class="stat-box skipped"><div class="val" id="stat-skipped">0</div><div class="key">Skipped</div></div>
+    <div class="stat-box time"><div class="val" id="stat-time">—</div><div class="key">Time Used</div></div>
+  </div>
+
+  <div class="review-section">
+    <h3>Answer Review</h3>
+    <div id="review-list"></div>
+  </div>
+
+  <div class="result-actions">
+    <button class="btn btn-ghost" onclick="location.reload()">← New Exam</button>
+    <button class="btn btn-primary" onclick="printResult()">🖨 Print Result</button>
+  </div>
+</div>
+
+<!-- SUBMIT MODAL -->
+<div class="modal-overlay" id="submit-modal">
+  <div class="modal">
+    <h3>Submit Exam?</h3>
+    <p id="modal-msg">You are about to submit your exam. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="submitExam()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── QUESTION BANK ──────────────────────────────────────────────
+const QUESTION_BANK = [
+  // Robotics – Introduction
+  { q: "A robot is a __________.", opts: ["Living thing", "Programmable machine that performs tasks", "Plant", "Building"], ans: 1 },
+  { q: "The study of robots is called __________.", opts: ["Biology", "Robotics", "Geography", "Chemistry"], ans: 1 },
+  { q: "Robots can perform tasks __________.", opts: ["Automatically", "Only at night", "Only in schools", "Only with animals"], ans: 0 },
+  { q: "Which of the following is an example of a robot?", opts: ["Chair", "Table", "Robot vacuum cleaner", "Book"], ans: 2 },
+  { q: "Robotics is a branch of __________.", opts: ["Art", "Engineering and Science", "Music", "Literature"], ans: 1 },
+  { q: "Industrial robots are mainly used in __________.", opts: ["Hospitals", "Factories", "Homes", "Farms"], ans: 1 },
+  { q: "Service robots are designed to __________.", opts: ["Manufacture products", "Provide services to people", "Build houses", "Grow crops"], ans: 1 },
+  { q: "A robot that can move from place to place is called a __________.", opts: ["Service robot", "Industrial robot", "Mobile robot", "Toy robot"], ans: 2 },
+  { q: "Which type of robot is commonly used for home cleaning?", opts: ["Service robot", "Industrial robot", "Military robot", "Toy robot"], ans: 0 },
+  { q: "Mobile robots move using __________.", opts: ["Wheels or legs", "Leaves", "Branches", "Roots"], ans: 0 },
+  { q: "Which of the following is NOT a type of robot?", opts: ["Industrial robot", "Service robot", "Mobile robot", "Wooden robot"], ans: 3 },
+  { q: "Industrial robots are known for their __________.", opts: ["Speed and accuracy", "Laziness", "Weakness", "Noise"], ans: 0 },
+  { q: "The main purpose of robots is to __________.", opts: ["Help perform tasks", "Sleep", "Eat food", "Grow naturally"], ans: 0 },
+  { q: "A robot vacuum cleaner is an example of a __________.", opts: ["Mobile robot", "Plant", "Animal", "Tool"], ans: 0 },
+  { q: "The \"brain\" of a robot is called the __________.", opts: ["Sensor", "Controller", "Wheel", "Battery"], ans: 1 },
+  { q: "The controller is responsible for __________.", opts: ["Processing information", "Producing food", "Cleaning floors", "Painting walls"], ans: 0 },
+  { q: "Sensors help a robot to __________.", opts: ["Gather information", "Sleep", "Eat", "Dance"], ans: 0 },
+  { q: "Which of the following is a sensor?", opts: ["Camera", "Table", "Chair", "Book"], ans: 0 },
+  { q: "Actuators help a robot to __________.", opts: ["Move", "Sleep", "Read", "Eat"], ans: 0 },
+  { q: "An electric motor is an example of a/an __________.", opts: ["Sensor", "Actuator", "Controller", "Program"], ans: 1 },
+  { q: "The power supply provides __________ to the robot.", opts: ["Food", "Water", "Energy", "Air"], ans: 2 },
+  { q: "Which component helps a robot detect obstacles?", opts: ["Sensor", "Battery", "Controller", "Wheel"], ans: 0 },
+  { q: "A battery serves as the robot's __________.", opts: ["Sensor", "Controller", "Power supply", "Program"], ans: 2 },
+  { q: "The controller receives information from the __________.", opts: ["Sensors", "Wheels", "Books", "Tables"], ans: 0 },
+  { q: "Which component converts energy into movement?", opts: ["Sensor", "Actuator", "Battery", "Wire"], ans: 1 },
+  { q: "A touch sensor helps a robot detect __________.", opts: ["Contact", "Sound", "Wind", "Rain"], ans: 0 },
+  { q: "A camera sensor helps a robot to __________.", opts: ["See objects", "Cook food", "Sing songs", "Sleep"], ans: 0 },
+  { q: "The controller of a robot is similar to the human __________.", opts: ["Ear", "Brain", "Nose", "Hand"], ans: 1 },
+  { q: "Without a power supply, a robot __________.", opts: ["Works faster", "Cannot operate", "Becomes larger", "Moves better"], ans: 1 },
+  { q: "A temperature sensor measures __________.", opts: ["Distance", "Temperature", "Speed", "Height"], ans: 1 },
+  { q: "Which of the following is NOT a component of a robot?", opts: ["Sensor", "Actuator", "Blackboard", "Controller"], ans: 2 },
+  { q: "Robots are used in manufacturing for __________.", opts: ["Welding", "Sleeping", "Reading", "Singing"], ans: 0 },
+  { q: "In hospitals, robots can assist in __________.", opts: ["Surgery", "Fishing", "Farming", "Driving"], ans: 0 },
+  { q: "Robots in agriculture help with __________.", opts: ["Harvesting", "Swimming", "Dancing", "Drawing"], ans: 0 },
+  { q: "Warehouses use robots for __________.", opts: ["Inventory management", "Cooking", "Singing", "Teaching"], ans: 0 },
+  { q: "Robots help reduce __________.", opts: ["Human effort", "Productivity", "Quality", "Accuracy"], ans: 0 },
+  { q: "Space agencies use robots for __________.", opts: ["Space exploration", "Farming", "Fishing", "Cooking"], ans: 0 },
+  { q: "Military robots can be used for __________.", opts: ["Surveillance", "Baking", "Teaching", "Singing"], ans: 0 },
+  { q: "Robots improve __________.", opts: ["Efficiency", "Laziness", "Waste", "Errors"], ans: 0 },
+  { q: "Robots can be used in __________.", opts: ["Hospitals", "Factories", "Farms", "All of the above"], ans: 3 },
+  { q: "Which type of robot works in factories?", opts: ["Industrial robot", "Service robot", "Mobile robot", "Toy robot"], ans: 0 },
+  { q: "Which component helps a robot move?", opts: ["Actuator", "Sensor", "Controller", "Battery"], ans: 0 },
+  { q: "Sensors act like a robot's __________.", opts: ["Senses", "Hair", "Clothes", "Shoes"], ans: 0 },
+  { q: "Robots can work in dangerous places.", opts: ["True", "False", "Maybe", "Never"], ans: 0 },
+  { q: "A proximity sensor detects __________.", opts: ["Nearby objects", "Temperature", "Sound", "Light"], ans: 0 },
+  { q: "Robots can help doctors during __________.", opts: ["Surgery", "Farming", "Fishing", "Swimming"], ans: 0 },
+  { q: "Robots can be programmed to repeat tasks.", opts: ["True", "False", "Never", "Impossible"], ans: 0 },
+  { q: "Which of these is a use of robots?", opts: ["Packaging goods", "Harvesting crops", "Surgery", "All of the above"], ans: 3 },
+  { q: "Robots are widely used in __________.", opts: ["Industry", "Healthcare", "Agriculture", "All of the above"], ans: 3 },
+  { q: "Robots help humans perform tasks more __________.", opts: ["Efficiently", "Slowly", "Poorly", "Lazily"], ans: 0 },
+  // Robot Components
+  { q: "Which of the following is a main part of a robot?", opts: ["Sensor", "Chalkboard", "Desk", "Book"], ans: 0 },
+  { q: "What is the main function of a sensor in a robot?", opts: ["To provide energy", "To gather information from the environment", "To paint objects", "To store food"], ans: 1 },
+  { q: "Which robot component acts as the \"brain\" of the robot?", opts: ["Sensor", "Actuator", "Controller", "Battery"], ans: 2 },
+  { q: "What is the function of an actuator in a robot?", opts: ["To detect objects", "To store data", "To produce movement", "To provide power"], ans: 2 },
+  { q: "A camera used in a robot is an example of a __________.", opts: ["Controller", "Actuator", "Sensor", "Battery"], ans: 2 },
+  { q: "The controller receives information from the __________.", opts: ["Wheels", "Sensors", "Battery", "Frame"], ans: 1 },
+  { q: "Software in robotics is used to __________.", opts: ["Program and control the robot's actions", "Build the robot's body", "Supply electricity", "Replace sensors"], ans: 0 },
+  { q: "Which of the following is an example of an actuator?", opts: ["Camera", "Temperature sensor", "Electric motor", "Keyboard"], ans: 2 },
+  { q: "The role of software in robotics is to tell the robot __________.", opts: ["What to do and how to do it", "How to grow", "How to sleep", "How to eat"], ans: 0 },
+  { q: "Which sequence correctly describes how a robot works?", opts: ["Actuator → Sensor → Controller", "Sensor → Controller → Actuator", "Controller → Sensor → Battery", "Battery → Actuator → Sensor"], ans: 1 },
+  // AI – Introduction
+  { q: "What does AI stand for?", opts: ["Automatic Information", "Artificial Intelligence", "Advanced Internet", "Artificial Internet"], ans: 1 },
+  { q: "Artificial Intelligence (AI) is the ability of a machine to __________.", opts: ["Think and learn like humans", "Eat food", "Grow like plants", "Sleep like humans"], ans: 0 },
+  { q: "Which of the following is an example of AI?", opts: ["Voice assistant", "Pencil", "Notebook", "Desk"], ans: 0 },
+  { q: "Which type of AI is designed to perform a specific task?", opts: ["Narrow AI", "General AI", "Natural AI", "Manual AI"], ans: 0 },
+  { q: "A voice assistant on a smartphone is an example of __________.", opts: ["Artificial Intelligence", "Farming technology", "Manual system", "Industrial machine"], ans: 0 },
+  { q: "AI is commonly used in __________.", opts: ["Smartphones", "Online shopping", "Navigation apps", "All of the above"], ans: 3 },
+  { q: "Which of the following is an application of AI in daily life?", opts: ["Face recognition", "Weather forecasting", "Voice commands", "All of the above"], ans: 3 },
+  { q: "AI-powered recommendation systems are used by __________.", opts: ["Video streaming platforms", "Online stores", "Music apps", "All of the above"], ans: 3 },
+  { q: "Which of the following helps AI systems learn from data?", opts: ["Machine Learning", "Painting", "Farming", "Drawing"], ans: 0 },
+  { q: "One benefit of AI in daily life is that it helps people __________.", opts: ["Save time and work efficiently", "Sleep all day", "Avoid technology", "Stop learning"], ans: 0 },
+  // AI – Applications
+  { q: "Artificial Intelligence (AI) can help students by providing __________.", opts: ["Personalized learning support", "Food supplies", "Building materials", "Sports equipment"], ans: 0 },
+  { q: "In education, AI can be used to __________.", opts: ["Mark tests automatically", "Build roads", "Catch fish", "Manufacture cars"], ans: 0 },
+  { q: "AI-powered learning apps help students to __________.", opts: ["Learn at their own pace", "Stop studying", "Avoid school work", "Sleep in class"], ans: 0 },
+  { q: "In healthcare, AI can assist doctors in __________.", opts: ["Diagnosing diseases", "Building bridges", "Farming crops", "Driving buses"], ans: 0 },
+  { q: "AI can help hospitals by __________.", opts: ["Managing patient records", "Making furniture", "Selling clothes", "Building houses"], ans: 0 },
+  { q: "Which of the following is an application of AI in healthcare?", opts: ["Medical image analysis", "Road construction", "Mining operations", "Fishing activities"], ans: 0 },
+  { q: "In business, AI can be used to __________.", opts: ["Analyze customer data", "Grow crops only", "Build schools only", "Manufacture books only"], ans: 0 },
+  { q: "AI chatbots are commonly used in businesses for __________.", opts: ["Customer service", "Road repairs", "Farming", "House painting"], ans: 0 },
+  { q: "Which of the following is a benefit of AI in business?", opts: ["Improved efficiency and productivity", "Increased delays", "Reduced accuracy", "More manual work"], ans: 0 },
+  { q: "AI is useful in education, healthcare, and business because it helps to __________.", opts: ["Make work faster and more accurate", "Increase errors", "Waste time", "Reduce productivity"], ans: 0 },
+];
+
+// ── STATE ──────────────────────────────────────────────────────
+let state = {
+  questions: [],
+  answers: [],
+  flags: [],
+  current: 0,
+  startTime: null,
+  endTime: null,
+  timerInterval: null,
+  timeLimitSeconds: 0,
+  elapsedSeconds: 0,
+  candidateName: '',
+  subject: '',
+};
+
+const LETTERS = ['A','B','C','D'];
+
+// ── SHUFFLE ────────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── START ──────────────────────────────────────────────────────
+function startExam() {
+  const name = document.getElementById('cfg-name').value.trim() || 'Candidate';
+  const subject = document.getElementById('cfg-subject').value.trim() || 'Digital Technology';
+  const qcount = parseInt(document.getElementById('cfg-qcount').value);
+  const timeMin = parseInt(document.getElementById('cfg-time').value);
+
+  state.candidateName = name;
+  state.subject = subject;
+  state.timeLimitSeconds = timeMin * 60;
+  state.elapsedSeconds = 0;
+  state.questions = shuffle(QUESTION_BANK).slice(0, qcount);
+  state.answers = new Array(qcount).fill(-1);
+  state.flags = new Array(qcount).fill(false);
+  state.current = 0;
+  state.startTime = new Date();
+
+  document.getElementById('header-title').textContent = subject;
+  document.getElementById('header-name').textContent = name;
+
+  showScreen('exam');
+  buildPalette();
+  renderQuestion();
+  startTimer();
+}
+
+// ── TIMER ──────────────────────────────────────────────────────
+function startTimer() {
+  const timerEl = document.getElementById('timer-display');
+  if (state.timeLimitSeconds === 0) { timerEl.textContent = '∞'; return; }
+
+  state.timerInterval = setInterval(() => {
+    state.elapsedSeconds++;
+    const remaining = state.timeLimitSeconds - state.elapsedSeconds;
+    if (remaining <= 0) {
+      clearInterval(state.timerInterval);
+      timerEl.textContent = '00:00';
+      submitExam(true);
+      return;
+    }
+    const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+    const s = String(remaining % 60).padStart(2, '0');
+    timerEl.textContent = `${m}:${s}`;
+    timerEl.classList.toggle('danger', remaining <= 60);
+  }, 1000);
+
+  // initial display
+  const m = String(Math.floor(state.timeLimitSeconds / 60)).padStart(2, '0');
+  timerEl.textContent = `${m}:00`;
+}
+
+// ── RENDER QUESTION ────────────────────────────────────────────
+function renderQuestion() {
+  const i = state.current;
+  const q = state.questions[i];
+  const total = state.questions.length;
+
+  document.getElementById('q-counter').textContent = `Question ${i+1} of ${total}`;
+  document.getElementById('header-qnum').textContent = `${i+1}/${total}`;
+  document.getElementById('q-text').textContent = q.q;
+
+  const pct = ((i + 1) / total * 100).toFixed(0);
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  const optList = document.getElementById('options-list');
+  optList.innerHTML = '';
+  q.opts.forEach((opt, idx) => {
+    const div = document.createElement('div');
+    div.className = 'option' + (state.answers[i] === idx ? ' selected' : '');
+    div.innerHTML = `<div class="option-letter">${LETTERS[idx]}</div><div class="option-text">${opt}</div>`;
+    div.onclick = () => selectAnswer(idx);
+    optList.appendChild(div);
+  });
+
+  // flag button
+  const fb = document.getElementById('flag-btn');
+  fb.classList.toggle('active', state.flags[i]);
+  fb.textContent = state.flags[i] ? '⚑ Flagged' : '⚑ Flag';
+
+  updatePalette();
+}
+
+// ── SELECT ─────────────────────────────────────────────────────
+function selectAnswer(idx) {
+  state.answers[state.current] = idx;
+  document.querySelectorAll('.option').forEach((el, i) => {
+    el.classList.toggle('selected', i === idx);
+  });
+  updatePalette();
+}
+
+// ── NAVIGATE ───────────────────────────────────────────────────
+function navigate(dir) {
+  const next = state.current + dir;
+  if (next < 0 || next >= state.questions.length) return;
+  state.current = next;
+  renderQuestion();
+}
+
+function goTo(idx) {
+  state.current = idx;
+  renderQuestion();
+}
+
+// ── FLAG ───────────────────────────────────────────────────────
+function toggleFlag() {
+  state.flags[state.current] = !state.flags[state.current];
+  renderQuestion();
+}
+
+// ── PALETTE ────────────────────────────────────────────────────
+function buildPalette() {
+  const grid = document.getElementById('palette-grid');
+  grid.innerHTML = '';
+  state.questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    btn.onclick = () => goTo(i);
+    btn.id = `pb-${i}`;
+    grid.appendChild(btn);
+  });
+}
+
+function updatePalette() {
+  state.questions.forEach((_, i) => {
+    const btn = document.getElementById(`pb-${i}`);
+    if (!btn) return;
+    btn.className = 'palette-btn';
+    if (i === state.current) btn.classList.add('current');
+    else if (state.flags[i]) btn.classList.add('flagged');
+    else if (state.answers[i] !== -1) btn.classList.add('answered');
+  });
+}
+
+// ── SUBMIT FLOW ────────────────────────────────────────────────
+function confirmSubmit() {
+  const answered = state.answers.filter(a => a !== -1).length;
+  const total = state.questions.length;
+  const unanswered = total - answered;
+  const msg = unanswered > 0
+    ? `You have ${unanswered} unanswered question(s). Submit anyway?`
+    : `All ${total} questions answered. Ready to submit?`;
+  document.getElementById('modal-msg').textContent = msg;
+  document.getElementById('submit-modal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('submit-modal').classList.remove('active');
+}
+
+function submitExam(auto = false) {
+  closeModal();
+  clearInterval(state.timerInterval);
+  state.endTime = new Date();
+  showResults();
+}
+
+// ── RESULTS ────────────────────────────────────────────────────
+function showResults() {
+  showScreen('result');
+
+  const total = state.questions.length;
+  let correct = 0, wrong = 0, skipped = 0;
+
+  state.questions.forEach((q, i) => {
+    if (state.answers[i] === -1) skipped++;
+    else if (state.answers[i] === q.ans) correct++;
+    else wrong++;
+  });
+
+  const pct = Math.round((correct / total) * 100);
+  const passed = pct >= 50;
+
+  // Score ring
+  const circumference = 364.4;
+  const offset = circumference - (circumference * pct / 100);
+  const arc = document.getElementById('score-arc');
+  arc.style.stroke = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--red)';
+  setTimeout(() => { arc.style.transition = 'stroke-dashoffset 1s ease'; arc.style.strokeDashoffset = offset; }, 100);
+
+  document.getElementById('score-pct').textContent = pct + '%';
+  document.getElementById('result-verdict').textContent = passed ? '✓ Passed' : '✗ Failed';
+  document.getElementById('result-verdict').style.color = passed ? 'var(--green)' : 'var(--red)';
+  document.getElementById('result-sub').textContent =
+    `${state.candidateName} · ${state.subject} · ${correct}/${total} correct`;
+
+  document.getElementById('stat-correct').textContent = correct;
+  document.getElementById('stat-wrong').textContent = wrong;
+  document.getElementById('stat-skipped').textContent = skipped;
+
+  // Time used
+  const elapsed = Math.floor((state.endTime - state.startTime) / 1000);
+  const em = String(Math.floor(elapsed / 60)).padStart(2,'0');
+  const es = String(elapsed % 60).padStart(2,'0');
+  document.getElementById('stat-time').textContent = `${em}:${es}`;
+
+  // Review
+  const reviewList = document.getElementById('review-list');
+  reviewList.innerHTML = '';
+  state.questions.forEach((q, i) => {
+    const userAns = state.answers[i];
+    const isCorrect = userAns === q.ans;
+    const isSkipped = userAns === -1;
+    const cls = isSkipped ? 'skip' : isCorrect ? 'pass' : 'fail';
+    const badgeCls = isSkipped ? 'badge-skip' : isCorrect ? 'badge-pass' : 'badge-fail';
+    const badgeText = isSkipped ? 'Skipped' : isCorrect ? 'Correct' : 'Wrong';
+
+    const div = document.createElement('div');
+    div.className = `review-item ${cls}`;
+    div.innerHTML = `
+      <div class="review-q-header">
+        <span class="review-q-num">Q${i+1}</span>
+        <span class="review-badge ${badgeCls}">${badgeText}</span>
+      </div>
+      <div class="review-q-text">${q.q}</div>
+      <div class="review-answers">
+        ${!isSkipped && !isCorrect ? `<div class="your-ans">Your answer: <span>${LETTERS[userAns]}. ${q.opts[userAns]}</span></div>` : ''}
+        <div class="correct-ans">Correct answer: <span>${LETTERS[q.ans]}. ${q.opts[q.ans]}</span></div>
+      </div>`;
+    reviewList.appendChild(div);
+  });
+}
+
+// ── SCREEN SWITCH ──────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+// ── PRINT ──────────────────────────────────────────────────────
+function printResult() { window.print(); }
+</script>
+</body>
+</html>
