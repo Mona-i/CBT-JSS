@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBT Admin — Forms and Sources of Energy</title>
+<style>
+  :root{
+    --navy:#16233F; --navy-2:#1F3357; --paper:#F6F3EA; --gold:#C9A227; --gold-dim:#E4C55E;
+    --ink:#1A1A1A; --muted:#6B7280; --good:#1E7B45; --bad:#B3261E; --line:#D9D3C1; --radius:4px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--paper); color:var(--ink); font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  .bar{ background:var(--navy); color:var(--paper); padding:14px 22px; display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid var(--gold); }
+  .bar .eyebrow{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-dim); font-weight:600; }
+  .bar .title{ font-family:Georgia,serif; font-size:18px; font-weight:700; }
+  main{ max-width:1100px; margin:0 auto; padding:28px 20px 60px; }
+
+  .gatecard{ max-width:420px; margin:80px auto 0; background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:36px; text-align:center; }
+  .gatecard h1{ font-family:Georgia,serif; font-size:20px; margin:0 0 6px; }
+  .gatecard p{ color:var(--muted); font-size:13px; margin:0 0 20px; line-height:1.5; }
+  .gatecard input{ width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:var(--radius); font-size:14px; margin-bottom:14px; }
+  .gatecard .err{ color:var(--bad); font-size:13px; margin-bottom:12px; display:none; }
+
+  .btn{ appearance:none; border:none; cursor:pointer; background:var(--navy); color:var(--paper); font-weight:600; font-size:14px; padding:11px 20px; border-radius:var(--radius); }
+  .btn:hover{ background:var(--navy-2); }
+  .btn.secondary{ background:transparent; color:var(--navy); border:1.5px solid var(--navy); }
+  .btn.secondary:hover{ background:rgba(22,35,63,.06); }
+
+  .statgrid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+  .statcard{ background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; }
+  .statcard .n{ font-family:Georgia,serif; font-size:28px; font-weight:700; color:var(--navy); }
+  .statcard .l{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-top:4px; font-weight:600; }
+
+  .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+  .toolbar input, .toolbar select{ padding:10px 12px; border:1.5px solid var(--line); border-radius:var(--radius); font-size:13px; font-family:'Inter',sans-serif; background:#fff; }
+  .toolbar input{ flex:1; min-width:180px; }
+  .toolbar .spacer{ flex:1; }
+
+  table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  thead th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:700; padding:12px 14px; border-bottom:2px solid var(--line); background:#FAF8F2; cursor:pointer; user-select:none; }
+  thead th:hover{ color:var(--navy); }
+  tbody td{ padding:12px 14px; border-bottom:1px solid var(--line); font-size:14px; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:#FFFCF3; }
+  .pill{ display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; }
+  .pill.pass{ background:#E7F4EB; color:var(--good); }
+  .pill.fail{ background:#FBE9E7; color:var(--bad); }
+  .viewlink{ color:var(--navy); font-size:13px; font-weight:600; cursor:pointer; text-decoration:underline; }
+
+  .empty{ text-align:center; padding:60px 20px; color:var(--muted); }
+  .loading{ text-align:center; padding:60px 20px; color:var(--muted); font-family:Georgia,serif; }
+  .errbox{ background:#FBE9E7; border:1px solid var(--bad); color:var(--bad); padding:14px 16px; border-radius:var(--radius); font-size:13px; margin-bottom:18px; }
+
+  /* Modal */
+  .overlay{ position:fixed; inset:0; background:rgba(22,35,63,.55); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50; }
+  .modal{ background:#fff; border-radius:var(--radius); max-width:640px; width:100%; max-height:85vh; overflow-y:auto; padding:28px; }
+  .modal h2{ font-family:Georgia,serif; font-size:18px; margin:0 0 4px; }
+  .modal .sub{ color:var(--muted); font-size:13px; margin-bottom:18px; }
+  .modal .qrow{ border-bottom:1px solid var(--line); padding:12px 0; font-size:13px; }
+  .modal .qrow .qt{ font-weight:600; margin-bottom:6px; }
+  .modal .qrow .ok{ color:var(--good); }
+  .modal .qrow .no{ color:var(--bad); }
+  .modal .closebtn{ margin-top:18px; }
+
+  @media (max-width:700px){
+    .statgrid{ grid-template-columns:repeat(2,1fr); }
+    table, thead, tbody, th, td, tr{ display:block; }
+    thead{ display:none; }
+    tbody tr{ border:1px solid var(--line); border-radius:var(--radius); margin-bottom:10px; }
+    tbody td{ border-bottom:none; display:flex; justify-content:space-between; gap:10px; }
+    tbody td::before{ content:attr(data-label); font-weight:700; color:var(--muted); font-size:11px; text-transform:uppercase; }
+  }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div>
+    <div class="eyebrow">CBT Admin</div>
+    <div class="title">Forms and Sources of Energy</div>
+  </div>
+  <button class="btn secondary" id="refreshBtn" style="display:none;" onclick="loadResults()">Refresh</button>
+</div>
+<main id="app"></main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =========================================================
+   Same Supabase project as the exam app — fill these in.
+   ========================================================= */
+const SUPABASE_URL = 'https://wuqkhojwiuwjwmecnfqg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cWtob2p3aXV3andtZWNuZnFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NTcxODcsImV4cCI6MjA5OTEzMzE4N30.lr-qC-epyEY_IeI8U_djlMqQOjb0_CYzUP-otVa2hek';
+const RESULTS_TABLE = 'exam_results';
+
+/* Basic deterrent only — NOT real security. Anyone who reads this
+   file's source can see the passcode, same as the anon key. Change
+   it to something only your teaching staff knows, and if you need
+   real access control, move to Supabase Auth instead. */
+const ADMIN_PASSCODE = '4icu';
+
+/* Needed to grade/expand a candidate's saved answers (indexes only
+   are stored in the DB) — keep this in sync with the exam file. */
+const QUESTIONS = [
+{q:"Energy is best defined as the ability to:", opts:["increase the size of an object","do work or cause a change","produce electricity only","create matter"], a:1},
+{q:"Work is said to be done when a force:", opts:["acts on an object without moving it","changes the colour of an object","moves an object through a distance","makes an object heavier"], a:2},
+{q:"The SI unit of energy is the:", opts:["Newton (N)","Watt (W)","Joule (J)","Pascal (Pa)"], a:2},
+{q:"Which of the following is a form of energy that travels as waves and can be seen?", opts:["Heat energy","Light energy","Sound energy","Chemical energy"], a:1},
+{q:"Which of the following is an example of light energy?", opts:["Wind","Sunlight","Petrol","Coal"], a:1},
+{q:"Heat energy is the energy possessed by:", opts:["moving or vibrating particles","light rays only","electrical wires","magnets"], a:0},
+{q:"Heat naturally flows from:", opts:["a colder object to a hotter object","a hotter object to a colder object","a small object to a larger object","a conductor to an insulator"], a:1},
+{q:"Which of the following produces heat energy mainly through friction?", opts:["A burning candle","Rubbing two hands together","A battery","Lightning"], a:1},
+{q:"Sound energy is produced by:", opts:["evaporation","vibrations","melting","condensation"], a:1},
+{q:"Sound can travel through:", opts:["solids only","liquids only","gases only","solids, liquids and gases"], a:3},
+{q:"Which of the following is an example of sound energy?", opts:["Firewood","A clap","A battery","Petrol"], a:1},
+{q:"Mechanical energy is the energy an object possesses because of its:", opts:["colour only","size only","motion or position","temperature only"], a:2},
+{q:"The energy possessed by a moving object is called:", opts:["electrical energy","potential energy","kinetic energy","chemical energy"], a:2},
+{q:"Which of the following has kinetic energy?", opts:["A parked car","A moving bicycle","A stretched rubber band","A book on a shelf"], a:1},
+{q:"Potential energy is:", opts:["energy due to motion","energy stored in an object","energy produced by sound","energy from light"], a:1},
+{q:"Which of the following has potential energy?", opts:["A moving train","A rolling ball","A rock on top of a hill","A running athlete"], a:2},
+{q:"Electrical energy is produced by the flow of:", opts:["neutrons","protons","electrons","atoms"], a:2},
+{q:"Which of the following is NOT an example of electrical energy?", opts:["Lightning","Electricity from a socket","A battery supplying current","Firewood"], a:3},
+{q:"Chemical energy is stored in the:", opts:["colour of substances","bonds between atoms and molecules","movement of particles","light rays"], a:1},
+{q:"Which of the following stores chemical energy?", opts:["Food","Sunlight","Wind","Waterfall"], a:0},
+{q:"Energy transformation refers to:", opts:["creating new energy","destroying energy completely","changing energy from one form to another","reducing the amount of energy"], a:2},
+{q:"According to the law of conservation of energy:", opts:["energy can be created but not destroyed","energy can neither be created nor destroyed","energy can only be destroyed","energy disappears after use"], a:1},
+{q:"An electric bulb converts electrical energy mainly into:", opts:["sound and chemical energy","light and heat energy","potential and kinetic energy","mechanical energy only"], a:1},
+{q:"In a torch, the battery converts chemical energy first into:", opts:["sound energy","heat energy","electrical energy","light energy"], a:2},
+{q:"In the human body, food is converted mainly into:", opts:["mechanical energy and heat energy","sound energy and light energy","electrical energy only","potential energy only"], a:0},
+{q:"When a ball is dropped from a height, its potential energy changes into:", opts:["chemical energy","heat energy","kinetic energy","sound energy only"], a:2},
+{q:"The main source of solar energy is the:", opts:["Moon","Earth","Sun","Stars"], a:2},
+{q:"Renewable energy sources are those that:", opts:["are available only at night","cannot be replaced once used","can be naturally replaced","always produce pollution"], a:2},
+{q:"Which of the following is a renewable source of energy?", opts:["Coal","Crude oil","Wind","Natural gas"], a:2},
+{q:"Hydropower is obtained from:", opts:["moving water","burning coal","sunlight","natural gas"], a:0},
+{q:"Which of the following is an example of biomass?", opts:["Petrol","Wood","Coal","Uranium"], a:1},
+{q:"Non-renewable energy sources are:", opts:["unlimited in supply","replaced every day naturally","limited and can run out","always clean"], a:2},
+{q:"Which of the following is NOT a fossil fuel?", opts:["Coal","Natural gas","Crude oil","Wind"], a:3},
+{q:"Nuclear energy is obtained from minerals such as:", opts:["gold","uranium","iron","copper"], a:1},
+{q:"Which of the following energy sources generally causes the least pollution?", opts:["Coal","Crude oil","Solar energy","Natural gas"], a:2},
+{q:"When a matchstick is struck, the energy transformation is:", opts:["Electrical → Chemical","Chemical → Heat and Light","Heat → Chemical","Mechanical → Electrical"], a:1},
+{q:"A stretched rubber band stores:", opts:["heat energy","electrical energy","potential energy","sound energy"], a:2},
+{q:"Which of the following correctly matches the source of energy with its type?", opts:["Coal — Renewable","Wind — Non-renewable","Solar — Renewable","Petroleum — Renewable"], a:2},
+{q:"Which of the following statements is TRUE?", opts:["Sound energy can travel only through air.","Heat flows from cold objects to hot objects.","Energy can change from one form to another.","Potential energy is the energy of motion."], a:2},
+{q:"Which of the following best demonstrates the law of conservation of energy?", opts:["Energy disappears after a bulb is switched on.","A battery creates new energy.","Energy changes from one form to another without being created or destroyed.","Heat energy cannot be converted into any other form."], a:2},
+];
+
+let client = null;
+let rows = [];
+let filtered = [];
+let sortKey = 'created_at';
+let sortDir = 'desc';
+
+function getClient(){
+  if(client) return client;
+  if(SUPABASE_URL.startsWith('YOUR_') || SUPABASE_ANON_KEY.startsWith('YOUR_')) return null;
+  client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return client;
+}
+
+function renderGate(err){
+  document.getElementById('app').innerHTML = `
+    <div class="gatecard">
+      <h1>Staff Access</h1>
+      <p>Enter the admin passcode to view candidate results.</p>
+      <input type="password" id="passInput" placeholder="Passcode" onkeydown="if(event.key==='Enter') checkPass()">
+      <div class="err" id="gateErr" style="${err?'display:block':''}">Incorrect passcode.</div>
+      <button class="btn" style="width:100%;" onclick="checkPass()">Enter</button>
+    </div>
+  `;
+  document.getElementById('refreshBtn').style.display = 'none';
+}
+
+function checkPass(){
+  const val = document.getElementById('passInput').value;
+  if(val === ADMIN_PASSCODE){
+    sessionStorage.setItem('cbt_admin_ok', '1');
+    document.getElementById('refreshBtn').style.display = 'inline-block';
+    loadResults();
+  } else {
+    document.getElementById('gateErr').style.display = 'block';
+  }
+}
+
+async function loadResults(){
+  const app = document.getElementById('app');
+  app.innerHTML = `<div class="loading">Loading results…</div>`;
+
+  const c = getClient();
+  if(!c){
+    app.innerHTML = `<div class="errbox">Supabase isn't configured yet — set SUPABASE_URL and SUPABASE_ANON_KEY at the top of this file.</div>`;
+    return;
+  }
+
+  const { data, error } = await c
+    .from(RESULTS_TABLE)
+    .select('*')
+    .order('created_at', { ascending:false });
+
+  if(error){
+    app.innerHTML = `<div class="errbox">Could not load results: ${error.message}</div>`;
+    return;
+  }
+
+  rows = data || [];
+  filtered = rows.slice();
+  renderDashboard();
+}
+
+function renderDashboard(){
+  const app = document.getElementById('app');
+  const classes = [...new Set(rows.map(r=>r.student_class))].sort();
+
+  const total = rows.length;
+  const avg = total ? Math.round(rows.reduce((sum,r)=>sum+Number(r.percentage),0) / total) : 0;
+  const passRate = total ? Math.round(rows.filter(r=>r.passed).length / total * 100) : 0;
+  const highest = total ? Math.max(...rows.map(r=>Number(r.percentage))) : 0;
+
+  app.innerHTML = `
+    <div class="statgrid">
+      <div class="statcard"><div class="n">${total}</div><div class="l">Candidates</div></div>
+      <div class="statcard"><div class="n">${avg}%</div><div class="l">Average Score</div></div>
+      <div class="statcard"><div class="n">${passRate}%</div><div class="l">Pass Rate</div></div>
+      <div class="statcard"><div class="n">${highest}%</div><div class="l">Highest Score</div></div>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="Search by name or admission no." oninput="applyFilters()">
+      <select id="classFilter" onchange="applyFilters()">
+        <option value="">All classes</option>
+        ${classes.map(c=>`<option value="${c}">${c}</option>`).join('')}
+      </select>
+      <div class="spacer"></div>
+      <button class="btn secondary" onclick="exportCsv()">Export CSV</button>
+    </div>
+    <div id="tableWrap"></div>
+  `;
+  renderTable();
+}
+
+function applyFilters(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const cls = document.getElementById('classFilter').value;
+  filtered = rows.filter(r=>{
+    const matchesQ = !q || r.student_name.toLowerCase().includes(q) || r.admission_no.toLowerCase().includes(q);
+    const matchesCls = !cls || r.student_class === cls;
+    return matchesQ && matchesCls;
+  });
+  renderTable();
+}
+
+function setSort(key){
+  if(sortKey === key){ sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+  else { sortKey = key; sortDir = 'desc'; }
+  renderTable();
+}
+
+function renderTable(){
+  const wrap = document.getElementById('tableWrap');
+  const sorted = filtered.slice().sort((a,b)=>{
+    let av = a[sortKey], bv = b[sortKey];
+    if(typeof av === 'string') av = av.toLowerCase();
+    if(typeof bv === 'string') bv = bv.toLowerCase();
+    if(av < bv) return sortDir === 'asc' ? -1 : 1;
+    if(av > bv) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  if(sorted.length === 0){
+    wrap.innerHTML = `<div class="empty">No results match.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th onclick="setSort('student_name')">Name</th>
+          <th onclick="setSort('admission_no')">Admission No.</th>
+          <th onclick="setSort('student_class')">Class</th>
+          <th onclick="setSort('score')">Score</th>
+          <th onclick="setSort('percentage')">%</th>
+          <th onclick="setSort('passed')">Grade</th>
+          <th onclick="setSort('created_at')">Submitted</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sorted.map(r=>`
+          <tr>
+            <td data-label="Name">${r.student_name}</td>
+            <td data-label="Admission No.">${r.admission_no}</td>
+            <td data-label="Class">${r.student_class}</td>
+            <td data-label="Score">${r.score}/${r.total}</td>
+            <td data-label="%">${r.percentage}%</td>
+            <td data-label="Grade"><span class="pill ${r.passed?'pass':'fail'}">${r.passed?'PASS':'FAIL'}</span></td>
+            <td data-label="Submitted">${new Date(r.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+            <td data-label=""><span class="viewlink" onclick='viewAnswers(${JSON.stringify(r.id)})'>View paper</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function viewAnswers(id){
+  const r = rows.find(x=>x.id === id);
+  if(!r) return;
+  const answers = r.answers || [];
+  const rowsHtml = QUESTIONS.map((q,i)=>{
+    const given = answers[i];
+    const gotIt = given === q.a;
+    const givenText = given === null || given === undefined ? '<em>Skipped</em>' : `${String.fromCharCode(65+given)}. ${q.opts[given]}`;
+    return `
+      <div class="qrow">
+        <div class="qt">${i+1}. ${q.q}</div>
+        <div class="${gotIt?'ok':'no'}">Answer: ${givenText} ${gotIt?'✓':'✗'}</div>
+        ${!gotIt ? `<div style="color:var(--muted);">Correct: ${String.fromCharCode(65+q.a)}. ${q.opts[q.a]}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="modal">
+      <h2>${r.student_name}</h2>
+      <div class="sub">${r.admission_no} · ${r.student_class} · ${r.score}/${r.total} (${r.percentage}%)</div>
+      ${rowsHtml}
+      <button class="btn secondary closebtn" onclick="this.closest('.overlay').remove()">Close</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function exportCsv(){
+  const header = ['Name','Admission No','Class','Score','Total','Percentage','Passed','Submitted'];
+  const lines = [header.join(',')];
+  filtered.forEach(r=>{
+    lines.push([
+      `"${r.student_name}"`, `"${r.admission_no}"`, `"${r.student_class}"`,
+      r.score, r.total, r.percentage, r.passed ? 'PASS' : 'FAIL',
+      new Date(r.created_at).toISOString()
+    ].join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'forms-and-sources-of-energy-results.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Boot
+if(sessionStorage.getItem('cbt_admin_ok') === '1'){
+  document.getElementById('refreshBtn').style.display = 'inline-block';
+  loadResults();
+} else {
+  renderGate(false);
+}
+</script>
+</body>
+</html>
