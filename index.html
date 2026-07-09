@@ -362,7 +362,7 @@ const QUESTIONS = [
 {q:"Which of the following best demonstrates the law of conservation of energy?", opts:["Energy disappears after a bulb is switched on.","A battery creates new energy.","Energy changes from one form to another without being created or destroyed.","Heat energy cannot be converted into any other form."], a:2},
 ];
 
-const TIME_LIMIT = 20 * 60; // 20 minutes in seconds
+const TIME_LIMIT = 30 * 60; // 20 minutes in seconds
 const EXAM_SUBJECT = 'Intermediate Science'; // fixed per exam file — keeps duplicate-check honest
 
 let state = {
@@ -541,7 +541,7 @@ function renderChecking(){
   <div class="examheader">
     <div class="id">
       <div class="eyebrow">Computer-Based Test</div>
-      <div class="title">Internet Communication</div>
+      <div class="title">Intermediate Science</div>
     </div>
   </div>
   <main><div class="sheet">
@@ -557,15 +557,15 @@ function renderStart(){
   return `
   <div class="examheader">
     <div class="id">
-      <div class="eyebrow">Digital Technology</div>
-      <div class="title">Internet Communication</div>
+      <div class="eyebrow">Intermediate Science</div>
+      <div class="title">forms and sources of energy</div>
       <span><a href="admin.html" class="button">Admin</a></span>
     </div>
   </div>
   <main><div class="sheet">
     <div class="startcard">
       <div class="eyebrow">Candidate Instructions</div>
-      <h1>Internet Communication Assessment</h1>
+      <h1>Intermediate Science</h1>
       <p class="sub">30 objective questions.</p>
       <ul class="rules">
         <li><span class="num">1</span><span>You have <b>20 minutes</b> to complete all 30 questions. The clock starts as soon as you begin.</span></li>
