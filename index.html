@@ -1,1 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forms and Sources of Energy</title>
+<style>
+  :root{
+    --navy: #16233F;
+    --navy-2: #1F3357;
+    --paper: #F6F3EA;
+    --gold: #C9A227;
+    --gold-dim: #E4C55E;
+    --ink: #1A1A1A;
+    --muted: #6B7280;
+    --good: #1E7B45;
+    --bad: #B3261E;
+    --line: #D9D3C1;
+    --radius: 4px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--paper);
+    color:var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .display{ font-family: Georgia, 'Times New Roman', serif; }
 
+  .app{ min-height:100vh; display:flex; flex-direction:column; }
+
+  /* HEADER / EXAM BAR */
+  .examheader{
+    background:var(--navy);
+    color:var(--paper);
+    padding:14px 22px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:3px solid var(--gold);
+  }
+  .examheader .id{
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .examheader .eyebrow{
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-dim); font-weight:600;
+  }
+  .examheader .title{
+    font-family: Georgia, serif; font-size:18px; font-weight:700; letter-spacing:.01em;
+  }
+  .examheader .clock{
+    font-variant-numeric: tabular-nums;
+    font-family: Georgia, serif;
+    font-size:22px;
+    background:var(--navy-2);
+    border:1px solid rgba(228,197,94,0.35);
+    padding:6px 16px;
+    border-radius:var(--radius);
+    letter-spacing:.03em;
+  }
+  .examheader .clock.warn{ color:#FFD7D2; border-color:var(--bad); }
+
+  /* PROGRESS STRIP */
+  .progressbar{
+    height:6px; width:100%; background:#E4DFCD;
+    position:relative;
+  }
+  .progressbar > div{
+    height:100%; background:var(--gold);
+    transition:width .25s ease;
+  }
+
+  main{ flex:1; display:flex; justify-content:center; padding:32px 18px 60px; }
+  .sheet{
+    width:100%; max-width:720px;
+  }
+
+  /* START SCREEN */
+  .startcard{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:40px 36px;
+    text-align:left;
+  }
+  .startcard .eyebrow{
+    font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); font-weight:700; margin-bottom:8px;
+  }
+  .startcard h1{
+    font-family: Georgia, serif;
+    font-size:30px; margin:0 0 10px;
+    line-height:1.2;
+  }
+  .startcard p.sub{ color:var(--muted); margin:0 0 28px; font-size:15px; line-height:1.6; }
+  .rules{
+    list-style:none; margin:0 0 30px; padding:0;
+    border-top:1px solid var(--line);
+  }
+  .rules li{
+    display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--line); font-size:14px; color:#333;
+  }
+  .rules li .num{
+    font-family:Georgia,serif; color:var(--gold); font-weight:700; min-width:20px;
+  }
+  .btn{
+    appearance:none; border:none; cursor:pointer;
+    background:var(--navy); color:var(--paper);
+    font-family:'Inter',sans-serif; font-weight:600; font-size:15px;
+    padding:14px 28px; border-radius:var(--radius);
+    letter-spacing:.02em;
+    transition: background .15s ease, transform .1s ease;
+  }
+  .btn:hover{ background:var(--navy-2); }
+  .btn:active{ transform:scale(.98); }
+  .btn.secondary{
+    background:transparent; color:var(--navy); border:1.5px solid var(--navy);
+  }
+  .btn.secondary:hover{ background:rgba(22,35,63,0.06); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-row{ display:flex; gap:12px; margin-top:8px; flex-wrap:wrap; }
+
+  /* QUESTION CARD */
+  .qmeta{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-bottom:14px;
+  }
+  .qmeta .qnum{
+    font-family:Georgia,serif; font-size:13px; color:var(--muted); letter-spacing:.05em; text-transform:uppercase;
+  }
+  .qmeta .qnum b{ color:var(--navy); font-size:15px; }
+  .flagbtn{
+    font-size:12px; color:var(--muted); background:none; border:1px solid var(--line);
+    padding:5px 10px; border-radius:20px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .flagbtn.flagged{ background:var(--gold-dim); border-color:var(--gold); color:#4A3B00; font-weight:600; }
+
+  .qcard{
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    padding:32px 32px 26px;
+  }
+  .qtext{
+    font-family:Georgia,serif; font-size:19px; line-height:1.5; margin:0 0 26px; color:var(--ink);
+  }
+  .options{ display:flex; flex-direction:column; gap:10px; }
+  .option{
+    display:flex; align-items:flex-start; gap:14px;
+    border:1.5px solid var(--line); border-radius:var(--radius);
+    padding:14px 16px; cursor:pointer;
+    transition: border-color .12s ease, background .12s ease;
+    font-size:15px; line-height:1.5;
+  }
+  .option:hover{ border-color:var(--gold); background:#FFFCF3; }
+  .option.selected{ border-color:var(--navy); background:#EEF1F6; }
+  .option .letter{
+    font-family:Georgia,serif; font-weight:700; color:var(--navy);
+    width:24px; height:24px; border:1.5px solid var(--navy); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;
+  }
+  .option.selected .letter{ background:var(--navy); color:#fff; }
+
+  .navrow{
+    display:flex; justify-content:space-between; align-items:center; margin-top:26px;
+  }
+  .navrow .left-btns, .navrow .right-btns{ display:flex; gap:10px; }
+
+  /* GRID NAV */
+  .gridnav{
+    margin-top:22px; padding-top:20px; border-top:1px solid var(--line);
+  }
+  .gridnav .label{ font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:10px; font-weight:600; }
+  .grid{ display:grid; grid-template-columns:repeat(10,1fr); gap:6px; }
+  .grid button{
+    aspect-ratio:1; border-radius:3px; border:1px solid var(--line); background:#fff;
+    font-size:12px; font-family:Georgia,serif; cursor:pointer; color:var(--muted);
+  }
+  .grid button.current{ border-color:var(--navy); border-width:2px; color:var(--navy); font-weight:700; }
+  .grid button.answered{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  .grid button.flagged::after{ content:'●'; color:var(--gold); font-size:7px; position:relative; top:-8px; left:2px; }
+
+  /* RESULTS */
+  .resultcard{ background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:36px; text-align:center; }
+  .resultcard .eyebrow{ font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+  .scoreBig{ font-family:Georgia,serif; font-size:64px; font-weight:700; color:var(--navy); margin:6px 0 2px; }
+  .scoreOf{ color:var(--muted); font-size:15px; margin-bottom:6px; }
+  .grade{ display:inline-block; padding:6px 18px; border-radius:20px; font-weight:700; font-size:13px; letter-spacing:.03em; margin-bottom:26px; }
+  .grade.pass{ background:#E7F4EB; color:var(--good); }
+  .grade.fail{ background:#FBE9E7; color:var(--bad); }
+  .statrow{ display:flex; justify-content:center; gap:36px; margin-bottom:30px; flex-wrap:wrap; }
+  .stat{ text-align:center; }
+  .stat .n{ font-family:Georgia,serif; font-size:26px; font-weight:700; }
+  .stat .l{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-top:2px; }
+  .stat.g .n{ color:var(--good); }
+  .stat.b .n{ color:var(--bad); }
+
+  /* REVIEW */
+  .reviewlist{ text-align:left; margin-top:8px; }
+  .revitem{ border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; margin-bottom:12px; }
+  .revitem .revq{ font-family:Georgia,serif; font-size:16px; margin:0 0 12px; }
+  .revrow{ display:flex; gap:10px; align-items:flex-start; font-size:14px; margin-bottom:6px; }
+  .revrow .tag{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; min-width:70px; padding-top:1px; }
+  .revrow.correct .tag{ color:var(--good); }
+  .revrow.wrong .tag{ color:var(--bad); }
+  .revrow.skip .tag{ color:var(--muted); }
+
+  footer.foot{ text-align:center; color:var(--muted); font-size:12px; padding:18px; }
+
+  /* STUDENT DETAILS FORM */
+  .studentform{
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    padding:24px 0; margin-bottom:26px;
+  }
+  .studentform .label{ font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:12px; font-weight:600; }
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:13px; font-weight:600; color:var(--navy); margin-bottom:6px; }
+  .field input{
+    width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:var(--radius);
+    font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); background:#fff;
+  }
+  .field input:focus{ outline:none; border-color:var(--gold); }
+  .field-row{ display:flex; gap:14px; }
+  .field-row .field{ flex:1; }
+  .field-error{ font-size:12px; color:var(--bad); margin-top:5px; display:none; }
+  .field.error input{ border-color:var(--bad); }
+  .field.error .field-error{ display:block; }
+
+  /* Admin link */
+  .button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #007BFF;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-family: Arial, sans-serif;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
+
+
+
+  /* PRINT SLIP */
+  .print-slip{ display:none; }
+  .studentbar{
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px 24px;
+    background:#F1EEE3; border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 20px; margin-bottom:24px; text-align:left;
+  }
+  .studentbar .sb-item .l{ font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:600; }
+  .studentbar .sb-item .v{ font-family:Georgia,serif; font-size:15px; color:var(--navy); font-weight:700; }
+
+  @media print{
+    body *{ visibility:hidden; }
+    .print-slip, .print-slip *{ visibility:visible; }
+    .print-slip{
+      display:block; position:absolute; top:0; left:0; width:100%;
+      padding:30px 40px; background:#fff;
+    }
+    .no-print{ display:none !important; }
+  }
+
+  @media (max-width:520px){
+    .field-row{ flex-direction:column; gap:0; }
+    .qcard{ padding:22px 18px; }
+    .startcard{ padding:28px 22px; }
+    .grid{ grid-template-columns:repeat(6,1fr); }
+    .statrow{ gap:20px; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =========================================================
+   SUPABASE CONFIG — fill these in with your project's values
+   (Project Settings → API in your Supabase dashboard)
+   ========================================================= */
+const SUPABASE_URL ='https://wuqkhojwiuwjwmecnfqg.supabase.co';
+const SUPABASE_ANON_KEY ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cWtob2p3aXV3andtZWNuZnFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NTcxODcsImV4cCI6MjA5OTEzMzE4N30.lr-qC-epyEY_IeI8U_djlMqQOjb0_CYzUP-otVa2hek';
+const RESULTS_TABLE = 'exam_results';
+
+let supabaseClient = null;
+function getClient(){
+  if(supabaseClient) return supabaseClient;
+  if(SUPABASE_URL.startsWith('YOUR_') || SUPABASE_ANON_KEY.startsWith('YOUR_')) return null;
+  if(!window.supabase) return null;
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return supabaseClient;
+}
+
+/** Look up a prior submission by normalized admission number. Returns the row or null. */
+async function fetchExistingResult(admissionNorm){
+  const client = getClient();
+  if(!client) throw new Error('Supabase is not configured yet.');
+  const { data, error } = await client
+    .from(RESULTS_TABLE)
+    .select('*')
+    .eq('admission_no_norm', admissionNorm)
+    .eq('subject', EXAM_SUBJECT)
+    .maybeSingle();
+  if(error) throw error;
+  return data;
+}
+
+/** Persist a finished attempt. Throws with a Postgres error code on conflict (e.g. '23505'). */
+async function saveResultToServer(payload){
+  const client = getClient();
+  if(!client) throw new Error('Supabase is not configured yet.');
+  const { data, error } = await client
+    .from(RESULTS_TABLE)
+    .insert(payload)
+    .select()
+    .single();
+  if(error) throw error;
+  return data;
+}
+</script>
+<script>
+const QUESTIONS = [
+{q:"Energy is best defined as the ability to:", opts:["increase the size of an object","do work or cause a change","produce electricity only","create matter"], a:1},
+{q:"Work is said to be done when a force:", opts:["acts on an object without moving it","changes the colour of an object","moves an object through a distance","makes an object heavier"], a:2},
+{q:"The SI unit of energy is the:", opts:["Newton (N)","Watt (W)","Joule (J)","Pascal (Pa)"], a:2},
+{q:"Which of the following is a form of energy that travels as waves and can be seen?", opts:["Heat energy","Light energy","Sound energy","Chemical energy"], a:1},
+{q:"Which of the following is an example of light energy?", opts:["Wind","Sunlight","Petrol","Coal"], a:1},
+{q:"Heat energy is the energy possessed by:", opts:["moving or vibrating particles","light rays only","electrical wires","magnets"], a:0},
+{q:"Heat naturally flows from:", opts:["a colder object to a hotter object","a hotter object to a colder object","a small object to a larger object","a conductor to an insulator"], a:1},
+{q:"Which of the following produces heat energy mainly through friction?", opts:["A burning candle","Rubbing two hands together","A battery","Lightning"], a:1},
+{q:"Sound energy is produced by:", opts:["evaporation","vibrations","melting","condensation"], a:1},
+{q:"Sound can travel through:", opts:["solids only","liquids only","gases only","solids, liquids and gases"], a:3},
+{q:"Which of the following is an example of sound energy?", opts:["Firewood","A clap","A battery","Petrol"], a:1},
+{q:"Mechanical energy is the energy an object possesses because of its:", opts:["colour only","size only","motion or position","temperature only"], a:2},
+{q:"The energy possessed by a moving object is called:", opts:["electrical energy","potential energy","kinetic energy","chemical energy"], a:2},
+{q:"Which of the following has kinetic energy?", opts:["A parked car","A moving bicycle","A stretched rubber band","A book on a shelf"], a:1},
+{q:"Potential energy is:", opts:["energy due to motion","energy stored in an object","energy produced by sound","energy from light"], a:1},
+{q:"Which of the following has potential energy?", opts:["A moving train","A rolling ball","A rock on top of a hill","A running athlete"], a:2},
+{q:"Electrical energy is produced by the flow of:", opts:["neutrons","protons","electrons","atoms"], a:2},
+{q:"Which of the following is NOT an example of electrical energy?", opts:["Lightning","Electricity from a socket","A battery supplying current","Firewood"], a:3},
+{q:"Chemical energy is stored in the:", opts:["colour of substances","bonds between atoms and molecules","movement of particles","light rays"], a:1},
+{q:"Which of the following stores chemical energy?", opts:["Food","Sunlight","Wind","Waterfall"], a:0},
+{q:"Energy transformation refers to:", opts:["creating new energy","destroying energy completely","changing energy from one form to another","reducing the amount of energy"], a:2},
+{q:"According to the law of conservation of energy:", opts:["energy can be created but not destroyed","energy can neither be created nor destroyed","energy can only be destroyed","energy disappears after use"], a:1},
+{q:"An electric bulb converts electrical energy mainly into:", opts:["sound and chemical energy","light and heat energy","potential and kinetic energy","mechanical energy only"], a:1},
+{q:"In a torch, the battery converts chemical energy first into:", opts:["sound energy","heat energy","electrical energy","light energy"], a:2},
+{q:"In the human body, food is converted mainly into:", opts:["mechanical energy and heat energy","sound energy and light energy","electrical energy only","potential energy only"], a:0},
+{q:"When a ball is dropped from a height, its potential energy changes into:", opts:["chemical energy","heat energy","kinetic energy","sound energy only"], a:2},
+{q:"The main source of solar energy is the:", opts:["Moon","Earth","Sun","Stars"], a:2},
+{q:"Renewable energy sources are those that:", opts:["are available only at night","cannot be replaced once used","can be naturally replaced","always produce pollution"], a:2},
+{q:"Which of the following is a renewable source of energy?", opts:["Coal","Crude oil","Wind","Natural gas"], a:2},
+{q:"Hydropower is obtained from:", opts:["moving water","burning coal","sunlight","natural gas"], a:0},
+{q:"Which of the following is an example of biomass?", opts:["Petrol","Wood","Coal","Uranium"], a:1},
+{q:"Non-renewable energy sources are:", opts:["unlimited in supply","replaced every day naturally","limited and can run out","always clean"], a:2},
+{q:"Which of the following is NOT a fossil fuel?", opts:["Coal","Natural gas","Crude oil","Wind"], a:3},
+{q:"Nuclear energy is obtained from minerals such as:", opts:["gold","uranium","iron","copper"], a:1},
+{q:"Which of the following energy sources generally causes the least pollution?", opts:["Coal","Crude oil","Solar energy","Natural gas"], a:2},
+{q:"When a matchstick is struck, the energy transformation is:", opts:["Electrical → Chemical","Chemical → Heat and Light","Heat → Chemical","Mechanical → Electrical"], a:1},
+{q:"A stretched rubber band stores:", opts:["heat energy","electrical energy","potential energy","sound energy"], a:2},
+{q:"Which of the following correctly matches the source of energy with its type?", opts:["Coal — Renewable","Wind — Non-renewable","Solar — Renewable","Petroleum — Renewable"], a:2},
+{q:"Which of the following statements is TRUE?", opts:["Sound energy can travel only through air.","Heat flows from cold objects to hot objects.","Energy can change from one form to another.","Potential energy is the energy of motion."], a:2},
+{q:"Which of the following best demonstrates the law of conservation of energy?", opts:["Energy disappears after a bulb is switched on.","A battery creates new energy.","Energy changes from one form to another without being created or destroyed.","Heat energy cannot be converted into any other form."], a:2},
+];
+
+const TIME_LIMIT = 20 * 60; // 20 minutes in seconds
+const EXAM_SUBJECT = 'Internet Communication'; // fixed per exam file — keeps duplicate-check honest
+
+let state = {
+  screen: 'start', // start | exam | results | review | locked
+  current: 0,
+  answers: new Array(QUESTIONS.length).fill(null),
+  flagged: new Array(QUESTIONS.length).fill(false),
+  timeLeft: TIME_LIMIT,
+  timerId: null,
+  student: { name: '', subject: EXAM_SUBJECT, klass: '', admission: '' },
+  admissionNorm: '',
+  finishedAt: null,
+  checking: false,
+  checkError: '',
+  saveStatus: 'idle', // idle | saving | saved | error | duplicate
+  existingResult: null
+};
+
+function fmtTime(s){
+  const m = Math.floor(s/60).toString().padStart(2,'0');
+  const sec = (s%60).toString().padStart(2,'0');
+  return m+':'+sec;
+}
+
+async function attemptStart(){
+  const nameEl = document.getElementById('inpName');
+  const admEl = document.getElementById('inpAdmission');
+  const classEl = document.getElementById('inpClass');
+
+  const name = nameEl.value.trim();
+  const admission = admEl.value.trim();
+  const klass = classEl.value.trim();
+
+  let ok = true;
+  [[nameEl,name],[admEl,admission],[classEl,klass]].forEach(([el,val])=>{
+    const field = el.closest('.field');
+    if(!val){ field.classList.add('error'); ok = false; }
+    else field.classList.remove('error');
+  });
+  if(!ok) return;
+
+  state.student = { name, subject: EXAM_SUBJECT, klass, admission };
+  state.admissionNorm = admission.toUpperCase();
+
+  state.checking = true;
+  state.checkError = '';
+  render();
+
+  try{
+    const existing = await fetchExistingResult(state.admissionNorm);
+    if(existing){
+      state.existingResult = existing;
+      state.checking = false;
+      state.screen = 'locked';
+      render();
+      return;
+    }
+  }catch(err){
+    console.warn('Eligibility check failed, proceeding without server verification:', err);
+    state.checkError = 'Could not reach the server to verify previous attempts, so this may be offline. Your result will still be checked for duplicates when you submit.';
+  }
+
+  state.checking = false;
+  startExam();
+}
+
+function startExam(){
+  state.screen = 'exam';
+  state.current = 0;
+  state.answers = new Array(QUESTIONS.length).fill(null);
+  state.flagged = new Array(QUESTIONS.length).fill(false);
+  state.timeLeft = TIME_LIMIT;
+  state.finishedAt = null;
+  state.saveStatus = 'idle';
+  state.existingResult = null;
+  render();
+  clearInterval(state.timerId);
+  state.timerId = setInterval(()=>{
+    state.timeLeft--;
+    if(state.timeLeft <= 0){
+      state.timeLeft = 0;
+      clearInterval(state.timerId);
+      submitExam();
+      return;
+    }
+    updateClockOnly();
+  },1000);
+}
+
+function updateClockOnly(){
+  const clockEl = document.getElementById('clockDisplay');
+  if(clockEl){
+    clockEl.textContent = fmtTime(state.timeLeft);
+    clockEl.parentElement.classList.toggle('warn', state.timeLeft <= 60);
+  }
+}
+
+function selectOption(qi, oi){
+  state.answers[qi] = oi;
+  render();
+}
+
+function toggleFlag(qi){
+  state.flagged[qi] = !state.flagged[qi];
+  render();
+}
+
+function goTo(i){
+  state.current = i;
+  render();
+}
+
+async function submitExam(){
+  clearInterval(state.timerId);
+  state.finishedAt = new Date();
+  state.screen = 'results';
+  state.saveStatus = 'saving';
+  render();
+
+  const s = scoreData();
+  const pct = Math.round((s.correct / s.total) * 100);
+  const payload = {
+    admission_no: state.student.admission,
+    student_name: state.student.name,
+    student_class: state.student.klass,
+    subject: state.student.subject,
+    score: s.correct,
+    total: s.total,
+    percentage: pct,
+    correct: s.correct,
+    wrong: s.wrong,
+    skipped: s.skipped,
+    passed: pct >= 50,
+    answers: state.answers,
+    finished_at: state.finishedAt.toISOString()
+  };
+
+  try{
+    await saveResultToServer(payload);
+    state.saveStatus = 'saved';
+  }catch(err){
+    console.error('Failed to save result:', err);
+    if(err && err.code === '23505'){
+      // Someone else (or another tab) already recorded this admission number for this subject.
+      state.saveStatus = 'duplicate';
+    } else {
+      state.saveStatus = 'error';
+    }
+  }
+  render();
+}
+
+function scoreData(){
+  let correct = 0, wrong = 0, skipped = 0;
+  QUESTIONS.forEach((q,i)=>{
+    if(state.answers[i] === null) skipped++;
+    else if(state.answers[i] === q.a) correct++;
+    else wrong++;
+  });
+  return {correct, wrong, skipped, total: QUESTIONS.length};
+}
+
+function render(){
+  const app = document.getElementById('app');
+  if(state.checking){ app.innerHTML = renderChecking(); return; }
+  if(state.screen === 'start') app.innerHTML = renderStart();
+  else if(state.screen === 'exam') app.innerHTML = renderExam();
+  else if(state.screen === 'results') app.innerHTML = renderResults();
+  else if(state.screen === 'review') app.innerHTML = renderReview();
+  else if(state.screen === 'locked') app.innerHTML = renderLocked();
+  attachHandlers();
+}
+
+function renderChecking(){
+  return `
+  <div class="examheader">
+    <div class="id">
+      <div class="eyebrow">Computer-Based Test</div>
+      <div class="title">Internet Communication</div>
+    </div>
+  </div>
+  <main><div class="sheet">
+    <div class="startcard" style="text-align:center; padding:60px 36px;">
+      <p style="font-family:Georgia,serif; font-size:17px; color:var(--navy);">Checking eligibility…</p>
+      <p class="sub" style="margin-top:6px;">Confirming this admission number hasn't already taken the test.</p>
+    </div>
+  </div></main>
+  `;
+}
+
+function renderStart(){
+  return `
+  <div class="examheader">
+    <div class="id">
+      <div class="eyebrow">Digital Technology</div>
+      <div class="title">Internet Communication</div>
+      <span><a href="admin.html" class="button">Admin</a></span>
+    </div>
+  </div>
+  <main><div class="sheet">
+    <div class="startcard">
+      <div class="eyebrow">Candidate Instructions</div>
+      <h1>Internet Communication Assessment</h1>
+      <p class="sub">30 objective questions.</p>
+      <ul class="rules">
+        <li><span class="num">1</span><span>You have <b>20 minutes</b> to complete all 30 questions. The clock starts as soon as you begin.</span></li>
+        <li><span class="num">2</span><span>Select one option per question. You may flag a question and return to it later using the question grid.</span></li>
+        <li><span class="num">3</span><span>You can move freely between questions before submitting — nothing is locked in until you submit.</span></li>
+        <li><span class="num">4</span><span>The test auto-submits when time runs out, so pace yourself.</span></li>
+      </ul>
+      <div class="studentform">
+        <div class="label">Candidate Details</div>
+        <div class="field">
+          <label for="inpName">Full Name</label>
+          <input type="text" id="inpName" placeholder="e.g. Ade Bello" value="${state.student.name}">
+          <div class="field-error">Please enter the candidate's name.</div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="inpAdmission">Admission / Registration No.</label>
+            <input type="text" id="inpAdmission" placeholder="e.g. SS1/034/2026" value="${state.student.admission}">
+            <div class="field-error">Please enter an admission number.</div>
+          </div>
+          <div class="field">
+            <label for="inpClass">Class</label>
+            <input type="text" id="inpClass" placeholder="e.g. SS1" value="${state.student.klass}">
+            <div class="field-error">Please enter a class.</div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="inpSubject">Subject</label>
+          <input type="text" id="inpSubject" value="${EXAM_SUBJECT}" readonly style="background:#F1EEE3; color:var(--muted); cursor:not-allowed;">
+        </div>
+        ${state.checkError ? `<p style="font-size:13px; color:var(--bad); margin-top:4px;">${state.checkError}</p>` : ''}
+      </div>
+      <button class="btn" onclick="attemptStart()">Begin Test</button>
+      <p style="font-size:12px; color:var(--muted); margin-top:14px;">Your admission number is used to make sure each candidate can only sit this test once.</p>
+    </div>
+  </div></main>
+  <footer class="foot">30 questions · 20:00 minutes · Single attempt</footer>
+  `;
+}
+
+function renderExam(){
+  const qi = state.current;
+  const q = QUESTIONS[qi];
+  const answeredCount = state.answers.filter(a=>a!==null).length;
+  const pct = Math.round((answeredCount / QUESTIONS.length) * 100);
+
+  const optsHtml = q.opts.map((opt,oi)=>{
+    const sel = state.answers[qi] === oi;
+    return `<div class="option ${sel?'selected':''}" onclick="selectOption(${qi},${oi})">
+      <span class="letter">${String.fromCharCode(65+oi)}</span>
+      <span>${opt}</span>
+    </div>`;
+  }).join('');
+
+  const gridHtml = QUESTIONS.map((_,i)=>{
+    const classes = ['','',''].filter(Boolean);
+    let cls = '';
+    if(i === qi) cls += ' current';
+    if(state.answers[i] !== null) cls += ' answered';
+    if(state.flagged[i]) cls += ' flagged';
+    return `<button class="${cls}" onclick="goTo(${i})">${i+1}</button>`;
+  }).join('');
+
+  return `
+  <div class="examheader">
+    <div class="id">
+      <div class="eyebrow">Computer-Based Test</div>
+      <div class="title">Forms and Sources of Energy</div>
+    </div>
+    <div class="clock" id="clockWrap"><span id="clockDisplay">${fmtTime(state.timeLeft)}</span></div>
+  </div>
+  <div class="progressbar"><div style="width:${pct}%"></div></div>
+  <main><div class="sheet">
+    <div class="qmeta">
+      <div class="qnum">Question <b>${qi+1}</b> of ${QUESTIONS.length}</div>
+      <button class="flagbtn ${state.flagged[qi]?'flagged':''}" onclick="toggleFlag(${qi})">${state.flagged[qi]?'★ Flagged':'☆ Flag for review'}</button>
+    </div>
+    <div class="qcard">
+      <p class="qtext">${q.q}</p>
+      <div class="options">${optsHtml}</div>
+      <div class="navrow">
+        <div class="left-btns">
+          <button class="btn secondary" ${qi===0?'disabled':''} onclick="goTo(${qi-1})">← Previous</button>
+        </div>
+        <div class="right-btns">
+          ${qi === QUESTIONS.length-1
+            ? `<button class="btn" onclick="confirmSubmit()">Submit Test</button>`
+            : `<button class="btn" onclick="goTo(${qi+1})">Next →</button>`}
+        </div>
+      </div>
+      <div class="gridnav">
+        <div class="label">Question Navigator — ${answeredCount}/${QUESTIONS.length} answered</div>
+        <div class="grid">${gridHtml}</div>
+      </div>
+    </div>
+  </div></main>
+  <footer class="foot">Answers are saved automatically as you move between questions.</footer>
+  `;
+}
+
+function confirmSubmit(){
+  const answeredCount = state.answers.filter(a=>a!==null).length;
+  const unanswered = QUESTIONS.length - answeredCount;
+  if(unanswered > 0){
+    const ok = confirm(`You have ${unanswered} unanswered question(s). Submit anyway?`);
+    if(!ok) return;
+  }
+  submitExam();
+}
+
+function renderResults(){
+  const s = scoreData();
+  const pct = Math.round((s.correct / s.total) * 100);
+  const passed = pct >= 50;
+  const dateStr = (state.finishedAt || new Date()).toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' });
+  const timeStr = (state.finishedAt || new Date()).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  const st = state.student;
+
+  let banner = '';
+  if(state.saveStatus === 'saving'){
+    banner = `<p style="font-size:13px; color:var(--muted); margin-bottom:18px;">Saving your result…</p>`;
+  } else if(state.saveStatus === 'saved'){
+    banner = `<p style="font-size:13px; color:var(--good); margin-bottom:18px;">✓ Result saved to the server.</p>`;
+  } else if(state.saveStatus === 'duplicate'){
+    banner = `<p style="font-size:13px; color:var(--bad); margin-bottom:18px;">A result for this admission number was already on record — this attempt was not saved again.</p>`;
+  } else if(state.saveStatus === 'error'){
+    banner = `<p style="font-size:13px; color:var(--bad); margin-bottom:18px;">⚠ Could not save this result to the server. Please print/screenshot this page now and show it to your teacher.</p>`;
+  }
+
+  return `
+  <div class="examheader no-print">
+    <div class="id">
+      <div class="eyebrow">Computer-Based Test</div>
+      <div class="title">Forms and Sources of Energy</div>
+    </div>
+  </div>
+  <main class="no-print"><div class="sheet">
+    <div class="resultcard">
+      <div class="eyebrow">Test Complete</div>
+      ${banner}
+      <div class="statrow" style="margin-bottom:22px;">
+        <div class="stat"><div class="n" style="font-size:16px;">${st.name || '—'}</div><div class="l">Name</div></div>
+        <div class="stat"><div class="n" style="font-size:16px;">${st.admission || '—'}</div><div class="l">Admission No.</div></div>
+        <div class="stat"><div class="n" style="font-size:16px;">${st.klass || '—'}</div><div class="l">Class</div></div>
+      </div>
+      <div class="scoreBig">${s.correct}/${s.total}</div>
+      <div class="scoreOf">${pct}% score</div>
+      <div class="grade ${passed?'pass':'fail'}">${passed ? 'PASS' : 'NEEDS REVIEW'}</div>
+      <div class="statrow">
+        <div class="stat g"><div class="n">${s.correct}</div><div class="l">Correct</div></div>
+        <div class="stat b"><div class="n">${s.wrong}</div><div class="l">Wrong</div></div>
+        <div class="stat"><div class="n">${s.skipped}</div><div class="l">Skipped</div></div>
+      </div>
+      <div class="btn-row" style="justify-content:center;">
+        <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+        <button class="btn secondary" onclick="state.screen='review'; render();">Review Answers</button>
+      </div>
+    </div>
+  </div></main>
+  <footer class="foot no-print">Pass mark: 50% (15/30) · Each candidate may sit this test once.</footer>
+
+  <div class="print-slip">
+    <div style="text-align:center; border-bottom:3px solid #C9A227; padding-bottom:16px; margin-bottom:24px;">
+      <div style="font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#C9A227; font-weight:700;">Computer-Based Test Result Slip</div>
+      <div style="font-family:Georgia,serif; font-size:22px; font-weight:700; color:#16233F; margin-top:4px;">Internet Communication Assessment</div>
+    </div>
+    <div class="studentbar">
+      <div class="sb-item"><div class="l">Name</div><div class="v">${st.name || '—'}</div></div>
+      <div class="sb-item"><div class="l">Admission No.</div><div class="v">${st.admission || '—'}</div></div>
+      <div class="sb-item"><div class="l">Class</div><div class="v">${st.klass || '—'}</div></div>
+      <div class="sb-item"><div class="l">Date</div><div class="v">${dateStr}</div></div>
+      <div class="sb-item"><div class="l">Time</div><div class="v">${timeStr}</div></div>
+    </div>
+    <div style="text-align:center; padding:20px 0; border-top:1px solid #D9D3C1; border-bottom:1px solid #D9D3C1;">
+      <div style="font-family:Georgia,serif; font-size:48px; font-weight:700; color:#16233F;">${s.correct}/${s.total}</div>
+      <div style="color:#6B7280; font-size:14px; margin:4px 0 10px;">${pct}% score</div>
+      <div style="display:inline-block; padding:6px 18px; border-radius:20px; font-weight:700; font-size:13px; ${passed ? 'background:#E7F4EB; color:#1E7B45;' : 'background:#FBE9E7; color:#B3261E;'}">${passed ? 'PASS' : 'NEEDS REVIEW'}</div>
+    </div>
+    <div style="display:flex; justify-content:center; gap:50px; padding:20px 0;">
+      <div style="text-align:center;"><div style="font-family:Georgia,serif; font-size:22px; font-weight:700; color:#1E7B45;">${s.correct}</div><div style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#6B7280;">Correct</div></div>
+      <div style="text-align:center;"><div style="font-family:Georgia,serif; font-size:22px; font-weight:700; color:#B3261E;">${s.wrong}</div><div style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#6B7280;">Wrong</div></div>
+      <div style="text-align:center;"><div style="font-family:Georgia,serif; font-size:22px; font-weight:700; color:#1A1A1A;">${s.skipped}</div><div style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#6B7280;">Skipped</div></div>
+    </div>
+    <div style="margin-top:40px; display:flex; justify-content:space-between; font-size:12px; color:#6B7280;">
+      <div>Pass mark: 50% (15/30)</div>
+      <div>Joeydev</div>
+    </div>
+  </div>
+  `;
+}
+
+function renderReview(){
+  const items = QUESTIONS.map((q,i)=>{
+    const given = state.answers[i];
+    const correctText = q.opts[q.a];
+    let rowsHtml = '';
+    if(given === null){
+      rowsHtml = `<div class="revrow skip"><span class="tag">Skipped</span><span>No answer given.</span></div>
+                  <div class="revrow correct"><span class="tag">Correct</span><span>${String.fromCharCode(65+q.a)}. ${correctText}</span></div>`;
+    } else if(given === q.a){
+      rowsHtml = `<div class="revrow correct"><span class="tag">Your answer</span><span>${String.fromCharCode(65+given)}. ${q.opts[given]} ✓</span></div>`;
+    } else {
+      rowsHtml = `<div class="revrow wrong"><span class="tag">Your answer</span><span>${String.fromCharCode(65+given)}. ${q.opts[given]} ✗</span></div>
+                  <div class="revrow correct"><span class="tag">Correct</span><span>${String.fromCharCode(65+q.a)}. ${correctText}</span></div>`;
+    }
+    return `<div class="revitem">
+      <p class="revq">${i+1}. ${q.q}</p>
+      ${rowsHtml}
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="examheader">
+    <div class="id">
+      <div class="eyebrow">Computer-Based Test</div>
+      <div class="title">Internet Communication</div>
+    </div>
+  </div>
+  <main><div class="sheet">
+    <div class="eyebrow" style="color:var(--gold); font-size:11px; letter-spacing:.16em; text-transform:uppercase; font-weight:700; margin-bottom:10px;">Answer Review</div>
+    <div class="reviewlist">${items}</div>
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn secondary" onclick="state.screen='results'; render();">Back to Score</button>
+    </div>
+  </div></main>
+  <footer class="foot">End of review.</footer>
+  `;
+}
+
+function resetToStart(){
+  clearInterval(state.timerId);
+  state.screen = 'start';
+  state.existingResult = null;
+  state.checkError = '';
+  render();
+}
+
+function renderLocked(){
+  const r = state.existingResult;
+  const dateStr = r.finished_at ? new Date(r.finished_at).toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' }) : '—';
+  const timeStr = r.finished_at ? new Date(r.finished_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) : '—';
+  const passed = !!r.passed;
+
+  return `
+  <div class="examheader no-print">
+    <div class="id">
+      <div class="eyebrow">Computer-Based Test</div>
+      <div class="title">Forms and Sources of Energy</div>
+    </div>
+  </div>
+  <main class="no-print"><div class="sheet">
+    <div class="resultcard">
+      <div class="eyebrow" style="color:var(--bad);">Already Submitted</div>
+      <h1 style="font-family:Georgia,serif; font-size:21px; margin:8px 0 20px; line-height:1.4;">This admission number has already completed this test. Each candidate may only attempt it once.</h1>
+      <div class="statrow" style="margin-bottom:22px;">
+        <div class="stat"><div class="n" style="font-size:16px;">${r.student_name}</div><div class="l">Name</div></div>
+        <div class="stat"><div class="n" style="font-size:16px;">${r.admission_no}</div><div class="l">Admission No.</div></div>
+        <div class="stat"><div class="n" style="font-size:16px;">${r.student_class}</div><div class="l">Class</div></div>
+      </div>
+      <div class="scoreBig">${r.score}/${r.total}</div>
+      <div class="scoreOf">${r.percentage}% score</div>
+      <div class="grade ${passed?'pass':'fail'}">${passed ? 'PASS' : 'NEEDS REVIEW'}</div>
+      <p style="color:var(--muted); font-size:13px; margin-top:6px;">Recorded on ${dateStr} at ${timeStr}. If you believe this is a mistake, contact your invigilator.</p>
+      <div class="btn-row" style="justify-content:center;">
+        <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+        <button class="btn secondary" onclick="resetToStart()">Back</button>
+      </div>
+    </div>
+  </div></main>
+  <footer class="foot no-print">Pass mark: 50% (15/30) · Each candidate may sit this test once.</footer>
+
+  <div class="print-slip">
+    <div style="text-align:center; border-bottom:3px solid #C9A227; padding-bottom:16px; margin-bottom:24px;">
+      <div style="font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#C9A227; font-weight:700;">Computer-Based Test Result Slip</div>
+      <div style="font-family:Georgia,serif; font-size:22px; font-weight:700; color:#16233F; margin-top:4px;">Internet Communication Assessment</div>
+    </div>
+    <div class="studentbar">
+      <div class="sb-item"><div class="l">Name</div><div class="v">${r.student_name}</div></div>
+      <div class="sb-item"><div class="l">Admission No.</div><div class="v">${r.admission_no}</div></div>
+      <div class="sb-item"><div class="l">Class</div><div class="v">${r.student_class}</div></div>
+      <div class="sb-item"><div class="l">Date</div><div class="v">${dateStr}</div></div>
+      <div class="sb-item"><div class="l">Time</div><div class="v">${timeStr}</div></div>
+    </div>
+    <div style="text-align:center; padding:20px 0; border-top:1px solid #D9D3C1; border-bottom:1px solid #D9D3C1;">
+      <div style="font-family:Georgia,serif; font-size:48px; font-weight:700; color:#16233F;">${r.score}/${r.total}</div>
+      <div style="color:#6B7280; font-size:14px; margin:4px 0 10px;">${r.percentage}% score</div>
+      <div style="display:inline-block; padding:6px 18px; border-radius:20px; font-weight:700; font-size:13px; ${passed ? 'background:#E7F4EB; color:#1E7B45;' : 'background:#FBE9E7; color:#B3261E;'}">${passed ? 'PASS' : 'NEEDS REVIEW'}</div>
+    </div>
+    <div style="display:flex; justify-content:center; gap:50px; padding:20px 0;">
+      <div style="text-align:center;"><div style="font-family:Georgia,serif; font-size:22px; font-weight:700; color:#1E7B45;">${r.correct}</div><div style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#6B7280;">Correct</div></div>
+      <div style="text-align:center;"><div style="font-family:Georgia,serif; font-size:22px; font-weight:700; color:#B3261E;">${r.wrong}</div><div style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#6B7280;">Wrong</div></div>
+      <div style="text-align:center;"><div style="font-family:Georgia,serif; font-size:22px; font-weight:700; color:#1A1A1A;">${r.skipped}</div><div style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#6B7280;">Skipped</div></div>
+    </div>
+    <div style="margin-top:40px; display:flex; justify-content:space-between; font-size:12px; color:#6B7280;">
+      <div>Pass mark: 50% (15/30)</div>
+      <div>Joeydev</div>
+    </div>
+  </div>
+  `;
+}
+
+function attachHandlers(){
+  // event handlers are inline via onclick for simplicity in this single-file app
+}
+
+render();
+</script>
+</body>
+</html>
